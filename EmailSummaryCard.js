@@ -21,14 +21,6 @@ const SummaryCard = styled.article`
     transform: translateY(-2px);
     box-shadow: 0 6px 16px rgba(0, 0, 0, 0.1);
   }
-
-  &:nth-child(2) {
-    border-left-color: ${(props) => props.theme.colors.accentSecondary};
-  }
-
-  &:nth-child(3) {
-    border-left-color: ${(props) => props.theme.colors.accentTertiary};
-  }
 `;
 
 const Sender = styled.div`
@@ -70,7 +62,35 @@ const Label = styled.span`
   color: ${(props) => props.theme.colors.textInverted};
 `;
 
+const TagContainer = styled.div`
+  margin-top: 0.75rem;
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.5rem;
+`;
+
+const Tag = styled.span`
+  background: ${(props) => props.theme.colors.tagBackground};
+  color: ${(props) => props.theme.colors.tagText};
+  padding: 0.25rem 0.75rem;
+  font-size: 0.75rem;
+  border-radius: 4px;
+  text-transform: uppercase;
+  font-weight: 500;
+`;
+
+const candidate_labels = ["Education", "Health", "Finance", "Technology", "Announcements", "Online Learning"];
+
+const classifyEmail = (email) => {
+  const lowerText = `${email.subject} ${email.summary}`.toLowerCase();
+  return candidate_labels.filter(label =>
+    lowerText.includes(label.toLowerCase()) // Simple keyword matching
+  );
+};
+
 const EmailSummaryCard = ({ email, delay }) => {
+  const tags = classifyEmail(email);
+
   return (
     <SummaryCard delay={delay}>
       <Sender>
@@ -79,6 +99,13 @@ const EmailSummaryCard = ({ email, delay }) => {
       </Sender>
       <Subject>{email.subject}</Subject>
       <Summary>{email.summary}</Summary>
+      {tags.length > 0 && (
+        <TagContainer>
+          {tags.map((tag, index) => (
+            <Tag key={index}>{tag}</Tag>
+          ))}
+        </TagContainer>
+      )}
     </SummaryCard>
   );
 };
