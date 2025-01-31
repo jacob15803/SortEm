@@ -1,67 +1,80 @@
 import React from "react";
-import styled from "styled-components";
+import styled, { keyframes } from "styled-components";
+import EmailSummaryCard from "./EmailSummaryCard";
+import DailyRecapCard from "./DailyRecapCard";
 
+const fadeIn = keyframes`
+  from { opacity: 0; transform: translateY(10px); }
+  to { opacity: 1; transform: translateY(0); }
+`;
 
 const DashboardContainer = styled.div`
   display: flex;
-  height: 100vh; /* Full-screen height */
+  height: 100vh;
   background-color: ${(props) => props.theme.colors.backgroundPrimary};
   color: ${(props) => props.theme.colors.textPrimary};
+  gap: 1.5rem;
+  padding: 2rem;
+  box-sizing: border-box;
+
+  @media (max-width: 768px) {
+    flex-direction: column;
+    padding: 1rem;
+  }
 `;
 
-const DailyRecap = styled.div`
-  flex: 1; /* 1/4th width */
-  background-color: ${(props) => props.theme.colors.backgroundSecondary};
-  padding: 1rem;
-  box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
-  border-radius: 8px;
+const DailyRecap = styled.aside`
+  flex: 1;
+  min-width: 280px;
+  background: linear-gradient(
+    135deg,
+    ${(props) => props.theme.colors.backgroundSecondary},
+    ${(props) => props.theme.colors.backgroundTertiary}
+  );
+  padding: 1.5rem;
+  border-radius: 16px;
+  box-shadow: 0 8px 24px rgba(0, 0, 0, 0.05);
+  height: calc(100vh - 4rem);
+  position: sticky;
+  top: 2rem;
+
+  @media (max-width: 768px) {
+    position: static;
+    height: auto;
+  }
+`;
+
+const EmailSummaries = styled.main`
+  flex: 3;
+  display: flex;
+  flex-direction: column;
+  gap: 1.25rem;
+  padding-right: 0.5rem;
+
+  @media (max-width: 768px) {
+    padding-right: 0;
+  }
+`;
+
+const ScrollContainer = styled.div`
   overflow-y: auto;
-  margin: 1rem;
-`;
+  padding-right: 0.5rem;
 
-const EmailSummaries = styled.div`
-  flex: 3; /* 3/4th width */
-  padding: 1rem;
-  overflow-y: auto;
-  margin: 1rem;
-`;
+  &::-webkit-scrollbar {
+    width: 6px;
+  }
 
-const RecapCard = styled.div`
-  background-color: ${(props) => props.theme.colors.cardBackground};
-  padding: 1rem;
-  border-radius: 8px;
-  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
-`;
+  &::-webkit-scrollbar-track {
+    background: rgba(0, 0, 0, 0.05);
+  }
 
-const SummaryCard = styled.div`
-  background-color: ${(props) => props.theme.colors.cardBackground};
-  padding: 1rem;
-  border: 1px solid ${(props) => props.theme.colors.border};
-  border-radius: 8px;
-  margin-bottom: 1rem;
-  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
-`;
-
-const Sender = styled.h4`
-  margin: 0;
-  font-size: ${(props) => props.theme.typography.fontSizes.subtitle};
-  font-weight: bold;
-`;
-
-const Subject = styled.h5`
-  margin: 0.5rem 0;
-  font-size: ${(props) => props.theme.typography.fontSizes.body};
-  font-weight: 600;
-`;
-
-const Summary = styled.p`
-  margin: 0;
-  font-size: ${(props) => props.theme.typography.fontSizes.small};
-  color: ${(props) => props.theme.colors.textSecondary};
+  &::-webkit-scrollbar-thumb {
+    background: ${(props) => props.theme.colors.accentPrimary};
+    border-radius: 4px;
+  }
 `;
 
 const Dashboard = () => {
-  // Mock data for daily recap and email summaries
   const dailyRecap = "Today, you received 15 emails. 10 work-related, 3 personal, and 2 newsletters.";
   const emailSummaries = [
     {
@@ -69,40 +82,42 @@ const Dashboard = () => {
       subject: "Project Update",
       summary: "Here's a quick update on the project timeline and milestones.",
       label: "Work",
+      labelColor: "#3B82F6"
     },
     {
       sender: "Amazon",
       subject: "Your Order has Shipped",
       summary: "Your order #12345 has been shipped and will arrive soon.",
       label: "Personal",
+      labelColor: "#10B981"
     },
     {
       sender: "News Daily",
       subject: "Top Headlines for Today",
       summary: "Check out the top news stories for today, including updates on global events.",
       label: "Newsletter",
+      labelColor: "#6366F1"
     },
   ];
 
   return (
     <DashboardContainer>
-      {/* Daily Recap Section */}
       <DailyRecap>
-        <RecapCard>
-          <h3>Daily Recap</h3>
-          <p>{dailyRecap}</p>
-        </RecapCard>
+        <ScrollContainer>
+          <DailyRecapCard recap={dailyRecap} />
+        </ScrollContainer>
       </DailyRecap>
 
-      {/* Email Summaries Section */}
       <EmailSummaries>
-        {emailSummaries.map((email, index) => (
-          <SummaryCard key={index}>
-            <Sender>{email.sender}</Sender>
-            <Subject>{email.subject}</Subject>
-            <Summary>{email.summary}</Summary>
-          </SummaryCard>
-        ))}
+        <ScrollContainer>
+          {emailSummaries.map((email, index) => (
+            <EmailSummaryCard
+              key={index}
+              email={email}
+              delay={index}
+            />
+          ))}
+        </ScrollContainer>
       </EmailSummaries>
     </DashboardContainer>
   );
