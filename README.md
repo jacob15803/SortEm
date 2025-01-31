@@ -20,3 +20,6 @@ Ensure you have the following installed on your system:
 ```bash
 git clone https://github.com/jacob15803/SortEm.git
 cd SortEm
+npm install  # or yarn install
+npm start  # or yarn start
+
