@@ -1,10 +1,15 @@
 from fastapi import FastAPI
 from pydantic import BaseModel
 from transformers import pipeline
-
+from fastapi.middleware.cors import CORSMiddleware
 app = FastAPI()
-
-
+app.add_middleware(
+    CORSMiddleware,
+    allow_origins=["http://localhost:3000"],
+    allow_credentials=True,
+    allow_methods=["*"],
+    allow_headers=["*"],
+)
 @app.get("/")
 def read_root():
     return {"message": "Welcome to the email summarization and tagging API!"}
@@ -12,7 +17,17 @@ def read_root():
 # Load summarization and classification pipelines
 summarizer = pipeline("summarization", model="sshleifer/distilbart-cnn-12-6")
 classifier = pipeline("zero-shot-classification", model="facebook/bart-large-mnli")
-
+@app.get("/emails")
+def get_emails():
+    return [
+        {
+            "sender": "John Doe",
+            "subject": "Meeting Reminder",
+            "summary": "Don't forget the meeting at 3 PM.",
+            "label": "Work",
+            "labelColor": "#3B82F6"
+        }
+    ]
 class EmailContent(BaseModel):
     email_text: str
 

@@ -1,4 +1,16 @@
+from fastapi import FastAPI
+from pydantic import BaseModel
 from transformers import pipeline
+from fastapi.middleware.cors import CORSMiddleware
+app = FastAPI()
+app.add_middleware(
+    CORSMiddleware,
+    allow_origins=["http://localhost:3000/"],  # Replace "*" with specific domains in production
+    allow_credentials=True,
+    allow_methods=["*"],
+    allow_headers=["*"],
+)
+
 
 # Load summarization pipeline with T5-small
 summarizer = pipeline("summarization",  model="sshleifer/distilbart-cnn-12-6")
@@ -6,65 +18,14 @@ classifier = pipeline("zero-shot-classification", model="facebook/bart-large-mnl
 
 # Input email text
 email_content = """
-Dear Learner
+"\near All,\n\nGreetings from Rajagiri School of Engineering & Technology!\n\n  SLK Global is hiring 2025 batch students\n\n1.      About the Organization\n\n  SLK Global Group is a global leader in supply chain solutions, specializing in logistics, procurement, and subcontracting services across defense, oil and gas, and commercial sectors. With a strong presence in global markets, SLK Global provides innovative and efficient logistics solutions to meet the diverse needs of its clients.\n\nFor more information, please visit https://slkglobal.co/.\n\n\n2.      Eligibility\n\nProgramme\n\nB.Tech, M.Tech\n\nBranches\n\nAEI, AD, CS, CSBS, IT, EC, EEE, ME, CE\n\nMarks\n\n10th (%)\n\n   12th (%)\n\nBTech CGPA/%\n\nMTech CGPA/%\n\n \n\n \n\n \n\n \n\nCurrent Backlogs\n\nZero Backlogs\n\n \n\n \n\n\n3.      Job Details\n\nJob Title: Logistics Executive (Fresh Graduate \u2013 Engineering Background)\nLocation: [Specify Location, e.g., Kochi, India or SLK Global offices]\nKey Responsibilities:\nManaging global logistics operations, including international and domestic movements.\nCoordinating with vendors and carriers to optimize costs and services.\nEnsuring compliance with global trade regulations and managing customs documentation.\nSupporting inventory management and supply chain activities.\nAnalyzing and optimizing logistics processes for efficiency and cost-effectiveness.\nPreparing documentation and generating logistics performance reports.\nKey Skills:\nBasic knowledge of global logistics and supply chain concepts.\nStrong analytical and communication skills.\nAdaptability and teamwork in a dynamic environment.\n4.  Compensation\n\n\nThe compensation details will be informed during the recruitment process.\n\n      \n\n            Last Date of Application: 14th Tuesday 2025\n\n        Register using the link:"}     
 
-Welcome to SWAYAM-NPTEL Online Courses and Certification!
-
-Thank you for signing up for our online course "Fundamental Algorithms: Design and Analysis". We wish you an enjoyable and informative learning experience.
-
-Details regarding the course:
-Name of the course: Fundamental Algorithms: Design and Analysis 
-Course url: https://onlinecourses.nptel.ac.in/noc25_cs33/preview
-Course duration : 4 weeks 
-
-The course will begin on 20 January 2025 When content is released on the portal, you will get an email alerting you.
-
-CONTENT AND ASSIGNMENTS
-
-Every week, about 2.5 to 4 hours of videos containing content by the Course instructor will be released along with an assignment based on this. Please watch the lectures, follow the course regularly and submit all assessments and assignments before the due date. Your regular participation is vital for learning and doing well in the course. This will be done week on week through the duration of the course.
-Please do the assignments yourself and even if you take help, kindly try to learn from it. These assignment will help you prepare for the final exams. Plagiarism and violating the Honor code will be taken very seriously if detected during the submission of assignments.
-
-ANNOUNCEMENT AND DISCUSSION GROUPS TO CLEAR DOUBTS:
-
-The announcement group - will only have messages from course instructors and teaching assistants - regarding the lessons, assignments, exam registration, hall tickets etc.
-The discussion forum (Ask a question tab on the portal) - is for everyone to ask questions and interact.Anyone who knows the answers can reply to anyone's post and the course instructor/TA will also respond to your queries. Please make maximum use of this feature as this will help you learn much better.
-If you have any questions regarding the exam, registration, hall tickets, results, queries related to the technical content in the lectures, any doubts in the assignments, etc can be posted in the forum section
-
-TO GET A CERTIFICATE - PROCESS AND CRITERIA:
-The course is free to enroll and learn from. But if you want a certificate, you have to register and write the proctored exam conducted by us in person at any of the designated exam centres.
-The exam is optional for a fee of Rs 1000/- (Rupees one thousand only).
-Date and Time of Exams: 22 March 2025 Morning session 9am to 12 noon; Afternoon Session 2pm to 5pm.
-Registration url: Announcements will be made when the registration form is open for registrations.
-The online registration form has to be filled and the certification exam fee needs to be paid. More details will be made available when the exam registration form is published. If there are any changes, it will be mentioned then.
-Please check the form for more details on the cities where the exams will be held, the conditions you agree to when you fill the form etc.
-
-CRITERIA TO GET A CERTIFICATE
-
-Average assignment score = 25% of average of best 3 assignments out of the total 4 assignments given in the course.
-Exam score = 75% of the proctored certification exam score out of 100
-
-Final score = Average assignment score + Exam score
-
-YOU WILL BE ELIGIBLE FOR A CERTIFICATE ONLY IF AVERAGE ASSIGNMENT SCORE >=10/25 AND EXAM SCORE >= 30/75. If one of the 2 criteria is not met, you will not get the certificate even if the Final score >= 40/100.
-
-Certificate will have your name, photograph and the score in the final exam with the breakup.It will have the logos of NPTEL and IIT Kharagpur. It will be e-verifiable at nptel.ac.in/noc.
-
-Only the e-certificate will be made available. Hard copies will not be dispatched.
-
-Once again, thanks for your interest in our online courses and certification. Happy learning.
-
-- NPTEL team
 """
-# Generate summary
-summary = summarizer(email_content, max_length=150, min_length=25, do_sample=False)
+@app.get("/emails")
+def get_emails():
+    summary = summarizer(email_content, max_length=150, min_length=25, do_sample=False)[0]['summary_text']
+    candidate_labels = ["Education", "Health", "Finance", "Technology", "Announcements", "Online Learning"]
+    tags = classifier(email_content, candidate_labels)
+    refined_tags = [label for label, score in zip(tags['labels'], tags['scores']) if score >= 0.25]
+    return {"summary": summary, "tags": refined_tags}
 
-print("Summary:", summary[0]['summary_text'])
-# Generate tags
-candidate_labels = ["Education", "Health", "Finance", "Technology", "Announcements", "Online Learning"]
-tags = classifier(email_content, candidate_labels)
-
-# Filter tags by confidence threshold
-threshold = 0.5
-refined_tags = [label for label, score in zip(tags['labels'], tags['scores']) if score >= threshold]
-
-print("Tags:", refined_tags)

@@ -1,6 +1,7 @@
 import React from 'react';
 import styled, { keyframes } from 'styled-components';
-
+import { useState, useEffect } from 'react';
+import axios from 'axios'; 
 const fadeIn = keyframes`
   from { opacity: 0; transform: translateY(10px); }
   to { opacity: 1; transform: translateY(0); }
@@ -78,18 +79,26 @@ const Tag = styled.span`
   text-transform: uppercase;
   font-weight: 500;
 `;
-
-const candidate_labels = ["Education", "Health", "Finance", "Technology", "Announcements", "Online Learning"];
-
-const classifyEmail = (email) => {
-  const lowerText = `${email.subject} ${email.summary}`.toLowerCase();
-  return candidate_labels.filter(label =>
-    lowerText.includes(label.toLowerCase()) // Simple keyword matching
-  );
-};
-
 const EmailSummaryCard = ({ email, delay }) => {
-  const tags = classifyEmail(email);
+  const [summary, setSummary] = useState(email.summary);
+  const [tags, setTags] = useState([]);
+
+  useEffect(() => {
+    const processEmail = async () => {
+      try {
+        const response = await axios.post('http://localhost:8000/process-email/', {
+          email_text: `${email.subject} ${email.summary}`,
+        });
+
+        setSummary(response.data.summary);
+        setTags(response.data.tags);
+      } catch (error) {
+        console.error('Error processing email:', error);
+      }
+    };
+
+    processEmail();
+  }, [email]);
 
   return (
     <SummaryCard delay={delay}>
